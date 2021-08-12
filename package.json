@@ -1,0 +1,14 @@
+{
+  "name": "elm-pages-app",
+  "scripts": {
+    "start": "elm-pages dev",
+    "add": "elm-pages add",
+    "build": "elm-pages build"
+  },
+  "devDependencies": {
+    "elm-pages": "^2.1.4"
+  },
+  "dependencies": {
+    "elm-default-tailwind-modules": "github:matheus23/elm-default-tailwind-modules"
+  }
+}
