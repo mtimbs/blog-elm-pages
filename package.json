@@ -1,14 +1,23 @@
 {
-  "name": "elm-pages-app",
+  "name": "michael-timbs-blog",
+  "version": "1.0.0",
+  "description": "Personal blog built with elm-pages.",
   "scripts": {
     "start": "elm-pages dev",
     "add": "elm-pages add",
     "build": "elm-pages build"
   },
+  "author": "Michael Timbs",
+  "license": "CC-BY-4.0",
   "devDependencies": {
-    "elm-pages": "^2.1.4"
+    "elm-oembed": "^0.0.6",
+    "elm-pages": "^2.1.4",
+    "elm-tailwind-modules": "^0.3.2",
+    "elm-tooling": "^1.4.0",
+    "postcss": "^8.3.6",
+    "tailwindcss": "^2.2.7"
   },
   "dependencies": {
-    "elm-default-tailwind-modules": "github:matheus23/elm-default-tailwind-modules"
+    "@tailwindcss/typography": "^0.4.1"
   }
 }

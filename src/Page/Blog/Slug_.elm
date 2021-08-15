@@ -1,16 +1,24 @@
 module Page.Blog.Slug_ exposing (Data, Model, Msg, page)
 
+import Article
+import Cloudinary
 import DataSource exposing (DataSource)
-import DataSource.File as File
-import DataSource.Glob as Glob
+import Date exposing (Date)
 import Head
 import Head.Seo as Seo
-import Html exposing (h1, li, text, ul)
-import OptimizedDecoder as Decode exposing (Decoder)
-import Page exposing (Page, PageWithState, StaticPayload)
+import Html.Styled exposing (..)
+import Html.Styled.Attributes as Attr exposing (css)
+import MarkdownCodec
+import MarkdownRenderer
+import OptimizedDecoder
+import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Url
+import Path
 import Shared
+import StructuredData
+import Tailwind.Breakpoints as Bp
+import Tailwind.Utilities as Tw
 import View exposing (View)
 
 
@@ -29,67 +37,22 @@ type alias RouteParams =
 page : Page RouteParams Data
 page =
     Page.prerender
-        { head = head
+        { data = data
+        , head = head
         , routes = routes
-        , data = data
         }
         |> Page.buildNoState { view = view }
 
 
-routes : DataSource (List RouteParams)
+routes : DataSource.DataSource (List RouteParams)
 routes =
-    Glob.succeed RouteParams
-        |> Glob.match (Glob.literal "articles/")
-        |> Glob.capture Glob.wildcard
-        |> Glob.match (Glob.literal "/index.md")
-        |> Glob.toDataSource
-
-
-type alias Data =
-    { body : String
-    , title : String
-    , published : String
-    , tags : List String
-    }
-
-
-data : RouteParams -> DataSource Data
-data routeParams =
-    File.bodyWithFrontmatter blogPostDecoder ("articles/" ++ routeParams.slug ++ "/index.md")
-
-
-blogPostDecoder : String -> Decoder Data
-blogPostDecoder body =
-    Decode.map3 (Data body)
-        (Decode.field "title" Decode.string)
-        (Decode.field "published" Decode.string)
-        (Decode.field "tags" tagsDecoder)
-
-
-tagsDecoder : Decoder (List String)
-tagsDecoder =
-    Decode.map (String.split ",")
-        Decode.string
-
-
-head :
-    StaticPayload Data RouteParams
-    -> List Head.Tag
-head static =
-    Seo.summary
-        { canonicalUrlOverride = Nothing
-        , siteName = "Michael Timbs | Blog"
-        , image =
-            { url = Pages.Url.external "TODO"
-            , alt = "elm-pages logo"
-            , dimensions = Nothing
-            , mimeType = Nothing
-            }
-        , description = "TODO"
-        , locale = Nothing
-        , title = static.data.title
-        }
-        |> Seo.website
+    Article.blogPostsGlob
+        |> DataSource.map
+            (List.map
+                (\globData ->
+                    { slug = globData.slug }
+                )
+            )
 
 
 view :
@@ -98,14 +61,140 @@ view :
     -> StaticPayload Data RouteParams
     -> View Msg
 view maybeUrl sharedModel static =
-    { title = static.routeParams.slug
+    { title = static.data.metadata.title
     , body =
-        [ h1 []
-            [ text static.data.title ]
-        , ul
-            []
-            (List.map (\tag -> li [] [ text tag ]) static.data.tags)
-        , Html.pre []
-            [ Html.text static.data.body ]
+        [ div
+            [ css
+                [ Tw.min_h_screen
+                , Tw.w_full
+                , Tw.relative
+                ]
+            ]
+            [ div
+                [ css
+                    [ Tw.pt_16
+                    , Tw.pb_16
+                    , Tw.px_8
+                    , Tw.flex
+                    , Tw.flex_col
+                    ]
+                ]
+                [ div
+                    [ css
+                        [ Bp.md [ Tw.mx_auto ]
+                        ]
+                    ]
+                    [ h1
+                        [ css
+                            [ Tw.text_center
+                            , Tw.text_4xl
+                            , Tw.font_bold
+                            , Tw.tracking_tight
+                            , Tw.mt_2
+                            , Tw.mb_8
+                            ]
+                        ]
+                        [ text static.data.metadata.title
+                        ]
+                    , div
+                        [ css
+                            [ Tw.prose
+                            , Tw.max_w_3xl
+                            ]
+                        ]
+                        static.data.body
+                    ]
+                ]
+            ]
         ]
     }
+
+
+head :
+    StaticPayload Data RouteParams
+    -> List Head.Tag
+head static =
+    let
+        metadata =
+            static.data.metadata
+    in
+    Head.structuredData
+        (StructuredData.article
+            { title = metadata.title
+            , description = metadata.description
+            , url = "https://michaeltimbs.me" ++ Path.toAbsolute static.path
+            , imageUrl = metadata.image
+            , datePublished = Date.toIsoString metadata.published
+            }
+        )
+        :: (Seo.summaryLarge
+                { canonicalUrlOverride = Nothing
+                , siteName = "elm-pages"
+                , image =
+                    { url = metadata.image
+                    , alt = metadata.description
+                    , dimensions = Nothing
+                    , mimeType = Nothing
+                    }
+                , description = metadata.description
+                , locale = Nothing
+                , title = metadata.title
+                }
+                |> Seo.article
+                    { tags = []
+                    , section = Nothing
+                    , publishedTime = Just (Date.toIsoString metadata.published)
+                    , modifiedTime = Nothing
+                    , expirationTime = Nothing
+                    }
+           )
+
+
+type alias Data =
+    { metadata : ArticleMetadata
+    , body : List (Html Msg)
+    }
+
+
+data : RouteParams -> DataSource Data
+data route =
+    MarkdownCodec.withFrontmatter Data
+        frontmatterDecoder
+        MarkdownRenderer.renderer
+        ("articles/" ++ route.slug ++ "/index.md")
+
+
+type alias ArticleMetadata =
+    { title : String
+    , description : String
+    , published : Date
+    , image : Pages.Url.Url
+    , draft : Bool
+    }
+
+
+frontmatterDecoder : OptimizedDecoder.Decoder ArticleMetadata
+frontmatterDecoder =
+    OptimizedDecoder.map5 ArticleMetadata
+        (OptimizedDecoder.field "title" OptimizedDecoder.string)
+        (OptimizedDecoder.field "description" OptimizedDecoder.string)
+        (OptimizedDecoder.field "published"
+            (OptimizedDecoder.string
+                |> OptimizedDecoder.andThen
+                    (\isoString ->
+                        Date.fromIsoString isoString
+                            |> OptimizedDecoder.fromResult
+                    )
+            )
+        )
+        (OptimizedDecoder.field "image" imageDecoder)
+        (OptimizedDecoder.field "draft" OptimizedDecoder.bool
+            |> OptimizedDecoder.maybe
+            |> OptimizedDecoder.map (Maybe.withDefault False)
+        )
+
+
+imageDecoder : OptimizedDecoder.Decoder Pages.Url.Url
+imageDecoder =
+    OptimizedDecoder.string
+        |> OptimizedDecoder.map (\cloudinaryAsset -> Cloudinary.url cloudinaryAsset Nothing 800)

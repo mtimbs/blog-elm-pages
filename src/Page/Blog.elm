@@ -1,4 +1,4 @@
-module Page.Index exposing (Data, Model, Msg, page)
+module Page.Blog exposing (Data, Model, Msg, page)
 
 import Article
 import Css.Global
@@ -6,7 +6,7 @@ import DataSource
 import Date
 import Head
 import Head.Seo as Seo
-import Html.Styled as Html exposing (..)
+import Html.Styled exposing (..)
 import Html.Styled.Attributes as Attr exposing (css)
 import Page exposing (Page, PageWithState, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
@@ -117,7 +117,7 @@ view maybeUrl sharedModel staticPayload =
                                 ]
                             ]
                         ]
-                        [ text "Michael Timbs" ]
+                        [ text "Blog" ]
                     , p
                         [ css
                             [ Tw.mt_3
@@ -266,4 +266,4 @@ blogCard ( route, info ) =
 
 blogDescription : String
 blogDescription =
-    "A travel journal for my shit coding adventures."
+    "The latest articles from my shit coding adventures."
