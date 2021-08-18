@@ -57,7 +57,7 @@ view :
     -> StaticPayload Data {}
     -> View msg
 view maybeUrl sharedModel staticPayload =
-    { title = "Michael Timbs Blog"
+    { title = "Michael Timbs"
     , body =
         [ div
             [ css
@@ -164,13 +164,13 @@ head staticPayload =
         , siteName = "Michael Timbs"
         , image =
             { url = [ "images", "icon.png" ] |> Path.join |> Pages.Url.fromPath
-            , alt = "Michael Timbs Blog logo"
+            , alt = "Michael Timbs "
             , dimensions = Nothing
             , mimeType = Nothing
             }
         , description = blogDescription
         , locale = Nothing
-        , title = "Michael Timbs | Blog"
+        , title = "Michael Timbs"
         }
         |> Seo.website
 

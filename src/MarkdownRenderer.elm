@@ -36,7 +36,8 @@ renderer =
             Html.a
                 [ Attr.href destination
                 , css
-                    [ Tw.underline
+                    [ Tw.text_purple_600
+                    , Tw.underline
                     ]
                 ]
                 body
@@ -45,10 +46,20 @@ renderer =
         \image ->
             case image.title of
                 Just _ ->
-                    Html.img [ Attr.src image.src, Attr.alt image.alt ] []
+                    Html.img
+                        [ Attr.src image.src
+                        , Attr.alt image.alt
+                        , css [ Tw.w_full ]
+                        ]
+                        []
 
                 Nothing ->
-                    Html.img [ Attr.src image.src, Attr.alt image.alt ] []
+                    Html.img
+                        [ Attr.src image.src
+                        , Attr.alt image.alt
+                        , css [ Tw.w_full ]
+                        ]
+                        []
     , unorderedList =
         \items ->
             Html.ul [ css [ Tw.list_none ] ]
@@ -230,7 +241,6 @@ heading { level, rawText, children } =
                     [ Tw.font_bold
                     , Tw.text_lg
                     , Tw.mt_8
-                    , Tw.mb_4
                     ]
                 ]
                 children
@@ -241,4 +251,4 @@ codeBlock details =
     SyntaxHighlight.javascript details.body
         |> Result.map (SyntaxHighlight.toBlockHtml (Just 1))
         |> Result.map Html.fromUnstyled
-        |> Result.withDefault (Html.pre [] [ Html.code [] [ Html.text details.body ] ])
+        |> Result.withDefault (Html.pre [ css [ Tw.p_2 ] ] [ Html.code [] [ Html.text details.body ] ])

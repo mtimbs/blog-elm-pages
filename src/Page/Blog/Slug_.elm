@@ -129,7 +129,7 @@ head static =
         )
         :: (Seo.summaryLarge
                 { canonicalUrlOverride = Nothing
-                , siteName = "elm-pages"
+                , siteName = "Michael Timbs"
                 , image =
                     { url = metadata.image
                     , alt = metadata.description
