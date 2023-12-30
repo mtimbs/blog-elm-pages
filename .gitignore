@@ -4,5 +4,8 @@ dist/
 .elm-pages/
 functions/render/elm-pages-cli.js
 
+.DS_Store
+.idea/
+
 # Local Netlify folder
 .netlify
