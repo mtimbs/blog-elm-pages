@@ -1,6 +1,6 @@
 [build]
   functions = "functions/"
   publish = "dist/"
-  command = "export ELM_HOME=\"$NETLIFY_BUILD_BASE/cache/elm\" && npm install --no-optional && npx --no-install elm-tooling install && npm run build"
+  command = "export ELM_HOME=\"$NETLIFY_BUILD_BASE/cache/elm\" && npm ci && npx --no-install elm-tooling install && npm run build"
 #  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF elm.json elm-tooling.json netlify.toml package.json package-lock.json src"
 
